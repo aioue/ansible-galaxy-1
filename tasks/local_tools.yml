@@ -3,8 +3,8 @@
 
 - name: Install local tools
   copy:
-    src: "{{ galaxy_local_tools_src_dir }}/{{ item.file | default(item) }}"
-    dest: "{{ galaxy_local_tools_dir }}/{{ item.file | default(item) }}"
+    src: "{{ galaxy_local_tools_src_dir }}/{{ item.dir ~ '/' if item.dir is defined else item.file | default(item) }}"
+    dest: "{{ galaxy_local_tools_dir }}/{{ item.dir ~ '/' if item.dir is defined else item.file | default(item) }}"
     mode: preserve
   loop: "{{ galaxy_local_tools | default([]) }}"
   when: galaxy_local_tools is defined

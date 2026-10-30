@@ -92,6 +92,7 @@
               - '''<tool file="other/custom_name.xml" />'' in conf'
               - '''macros.xml'' not in conf'
               - '''name="Other Tools"'' in conf'
+              - '''name="Local Tools"'' in conf'
           vars:
             conf: "{{ tool_conf.content | b64decode }}"
 
