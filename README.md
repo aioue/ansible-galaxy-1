@@ -300,6 +300,33 @@ service with the `systemctl` utility as the `root` user or with `sudo`:
 # systemctl stop galaxy      # stop galaxy
 ```
 
+You can add your own directives to the `[Service]` section of the Galaxy unit with `galaxy_systemd_extra_directives`, a
+list with one directive per item (default: `[]`). For example, this set hardens the unit (`systemd-analyze security`
+rates it 4.4 instead of 9.2):
+
+```yaml
+galaxy_systemd_extra_directives:
+  - CapabilityBoundingSet=CAP_KILL CAP_CHOWN CAP_FSETID CAP_SETFCAP
+  - ProtectHome=yes
+  - ProtectHostname=yes
+  - ProtectKernelLogs=yes
+  - ProtectKernelModules=yes
+  - ProtectKernelTunables=yes
+  - RestrictNamespaces=~cgroup ipc net mnt pid user uts
+  - RestrictRealtime=yes
+  - LockPersonality=yes
+  - PrivateDevices=yes
+  - PrivateTmp=yes
+  - RestrictSUIDSGID=yes
+  - ProtectControlGroups=yes
+  - ProtectSystem=yes
+  - RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+  - NoNewPrivileges=yes
+```
+
+Some directives (e.g. `ProtectHome`, `PrivateTmp`) can break your layout or local jobs, so test them first. Most have
+no effect in a user unit (`galaxy_systemd_root: false`).
+
 You can use systemd user mode if you do not have root privileges on your system by setting `galaxy_systemd_root` to
 `false`. Add `--user` to the `systemctl` commands above to interact with systemd in user mode:
 
