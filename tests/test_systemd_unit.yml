@@ -1,6 +1,6 @@
 ---
-# templates/systemd/galaxy.service.j2 renders the Galaxy systemd unit. It must render without galaxy_root, which
-# only the root-dir layout defines, and set HOME only when galaxy_root is defined.
+# templates/systemd/galaxy.service.j2 and galaxy-reports.service.j2 render the Galaxy and Reports systemd units. They
+# must render without galaxy_root, which only the root-dir layout defines, and set HOME only when it is defined.
 # Regression test for #138: the unit failed to render on layouts other than root-dir.
 - name: Test the Galaxy systemd unit
   hosts: localhost
@@ -18,41 +18,41 @@
     galaxy_dynamic_job_rules_dir: /srv/galaxy/dynamic_rules
     galaxy_gravity_state_dir: /srv/galaxy/var/gravity
     galaxy_config_file: /srv/galaxy/config/galaxy.yml
+    galaxy_config_style: yaml
+    galaxy_reports_path: /srv/galaxy/config/reports.yml
     __galaxy_systemd_memory_limit_merged:
       mule: 8
+      reports: 1
   tasks:
     - name: Create a temporary directory
       ansible.builtin.tempfile:
         state: directory
       register: __unit_dir
 
-    - name: Render the unit without galaxy_root
+    - name: Render the units without galaxy_root
       ansible.builtin.template:
-        src: roles/galaxyproject.galaxy/templates/systemd/galaxy.service.j2
-        dest: "{{ __unit_dir.path }}/no-root.service"
+        src: roles/galaxyproject.galaxy/templates/systemd/{{ item }}.service.j2
+        dest: "{{ __unit_dir.path }}/{{ item }}-no-root.service"
         mode: "0644"
+      loop: &units
+        - galaxy
+        - galaxy-reports
 
-    - name: Render the unit with galaxy_root
+    - name: Render the units with galaxy_root
       ansible.builtin.template:
-        src: roles/galaxyproject.galaxy/templates/systemd/galaxy.service.j2
-        dest: "{{ __unit_dir.path }}/with-root.service"
+        src: roles/galaxyproject.galaxy/templates/systemd/{{ item }}.service.j2
+        dest: "{{ __unit_dir.path }}/{{ item }}-with-root.service"
         mode: "0644"
+      loop: *units
       vars:
         galaxy_root: /srv/galaxy
-
-    - name: Read the units
-      ansible.builtin.slurp:
-        src: "{{ __unit_dir.path }}/{{ item }}.service"
-      loop:
-        - no-root
-        - with-root
-      register: __units
 
     - name: Check HOME is set only when galaxy_root is defined
       ansible.builtin.assert:
         that:
-          - "'HOME=' not in (__units.results[0].content | b64decode)"
-          - "'Environment=HOME=/srv/galaxy\n' in (__units.results[1].content | b64decode)"
+          - "'HOME=' not in lookup('ansible.builtin.file', __unit_dir.path ~ '/' ~ item ~ '-no-root.service')"
+          - "'Environment=HOME=/srv/galaxy\n' in lookup('ansible.builtin.file', __unit_dir.path ~ '/' ~ item ~ '-with-root.service', rstrip=false)"
+      loop: *units
 
     - name: Remove the temporary directory
       ansible.builtin.file:
