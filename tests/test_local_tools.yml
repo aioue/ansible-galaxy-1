@@ -38,11 +38,11 @@
             content: "{{ item.content }}\n"
             mode: "0644"
           loop:
-            - {path: simple.xml, content: '<tool id="simple" />'}
-            - {path: my_tool/my_tool.xml, content: '<tool id="my_tool" />'}
-            - {path: my_tool/helper.py, content: 'print("hi")'}
-            - {path: other/custom_name.xml, content: '<tool id="other" />'}
-            - {path: other/macros.xml, content: '<macros />'}
+            - { path: simple.xml, content: '<tool id="simple" />' }
+            - { path: my_tool/my_tool.xml, content: '<tool id="my_tool" />' }
+            - { path: my_tool/helper.py, content: 'print("hi")' }
+            - { path: other/custom_name.xml, content: '<tool id="other" />' }
+            - { path: other/macros.xml, content: "<macros />" }
           loop_control:
             label: "{{ item.path }}"
           changed_when: false
@@ -90,7 +90,7 @@
               - '''<tool file="simple.xml" />'' in conf'
               - '''<tool file="my_tool/my_tool.xml" />'' in conf'
               - '''<tool file="other/custom_name.xml" />'' in conf'
-              - '''macros.xml'' not in conf'
+              - "'macros.xml' not in conf"
               - '''name="Other Tools"'' in conf'
               - '''name="Local Tools"'' in conf'
           vars:

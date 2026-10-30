@@ -2,7 +2,7 @@
 # Install local tools and the local_tool_conf.xml that registers them
 
 - name: Install local tools
-  copy:
+  ansible.builtin.copy:
     src: "{{ galaxy_local_tools_src_dir }}/{{ item.dir ~ '/' if item.dir is defined else item.file | default(item) }}"
     dest: "{{ galaxy_local_tools_dir }}/{{ item.dir ~ '/' if item.dir is defined else item.file | default(item) }}"
     mode: preserve
@@ -10,7 +10,7 @@
   when: galaxy_local_tools is defined
 
 - name: Install local_tool_conf.xml
-  template:
+  ansible.builtin.template:
     src: local_tool_conf.xml.j2
     dest: "{{ galaxy_config_dir }}/local_tool_conf.xml"
     mode: "{{ galaxy_config_perms }}"
@@ -18,6 +18,6 @@
   when: galaxy_local_tools is defined
 
 - name: Append local_tool_conf.xml to tool_config_file Galaxy config option
-  set_fact:
+  ansible.builtin.set_fact:
     galaxy_tool_config_files: "{{ galaxy_tool_config_files + [galaxy_config_dir ~ '/local_tool_conf.xml'] }}"
   when: galaxy_local_tools is defined
