@@ -27,6 +27,7 @@ galaxy_manage_errordocs: no
 galaxy_backup_configfiles: yes
 galaxy_manage_gravity: "{{ false if __galaxy_major_version is version('22.05', '<') else true }}"
 galaxy_manage_systemd: no # For Galaxy
+galaxy_manage_restart: true # Run the role's handlers that start, restart and update Galaxy
 galaxy_manage_systemd_reports: no # For Reports
 galaxy_manage_cleanup: no
 galaxy_manage_themes: "{{ galaxy_manage_static_setup and (galaxy_themes is defined or galaxy_themes_subdomains | length > 0) }}"
