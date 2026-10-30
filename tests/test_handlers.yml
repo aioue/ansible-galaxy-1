@@ -51,6 +51,7 @@
           - (calls.content | b64decode).splitlines()[0] is search('argv=-c ' ~ galaxy_config_file ~ ' update\|')
           - (calls.content | b64decode).splitlines()[1] is search('argv=-c ' ~ galaxy_config_file ~ ' graceful\|')
           - (calls.content | b64decode).splitlines() | select('search', 'bytecode=1\|') | list | length == 2
+          - (calls.content | b64decode).splitlines() | select('search', 'state=' ~ galaxy_gravity_state_dir ~ '\|') | list | length == 2
           - (calls.content | b64decode).splitlines() | select('search', 'user=' ~ __galaxy_user_name ~ '$') | list | length == 2
 
     - name: Remove the temp dir
