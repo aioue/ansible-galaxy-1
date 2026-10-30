@@ -1,0 +1,8 @@
+---
+# Look for the staged prebuilt client in static/dist.
+- name: Find the staged prebuilt client
+  ansible.builtin.find:
+    paths: "{{ galaxy_static_dir }}/dist"
+    file_type: file
+    recurse: true
+  register: __galaxy_prebuilt_client_files
