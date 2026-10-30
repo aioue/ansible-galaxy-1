@@ -1,7 +1,8 @@
 ---
 # templates/systemd/galaxy.service.j2 and galaxy-reports.service.j2 render the Galaxy and Reports systemd units. They
 # must render without galaxy_root, which only the root-dir layout defines, and set HOME only when it is defined.
-# Regression test for #138: the unit failed to render on layouts other than root-dir.
+# Regression test for #138: the unit failed to render on layouts other than root-dir. Also tests that
+# galaxy_systemd_extra_directives (#145) lands in the Galaxy unit's [Service] section.
 - name: Test the Galaxy systemd unit
   hosts: localhost
   gather_facts: false
@@ -11,6 +12,7 @@
     galaxy_systemd_timeout_start_sec: 300
     galaxy_systemd_command: /srv/galaxy/venv/bin/galaxyctl start
     galaxy_systemd_env: []
+    galaxy_systemd_extra_directives: []
     __galaxy_user_name: galaxy
     __galaxy_user_group: galaxy
     galaxy_server_dir: /srv/galaxy/server
@@ -53,6 +55,31 @@
           - "'HOME=' not in lookup('ansible.builtin.file', __unit_dir.path ~ '/' ~ item ~ '-no-root.service')"
           - "'Environment=HOME=/srv/galaxy\n' in lookup('ansible.builtin.file', __unit_dir.path ~ '/' ~ item ~ '-with-root.service', rstrip=false)"
       loop: *units
+
+    - name: Render the Galaxy unit with extra directives
+      ansible.builtin.template:
+        src: roles/galaxyproject.galaxy/templates/systemd/galaxy.service.j2
+        dest: "{{ __unit_dir.path }}/galaxy-extra-directives.service"
+        mode: "0644"
+      vars:
+        galaxy_systemd_extra_directives:
+          - ProtectSystem=yes
+          - NoNewPrivileges=yes
+
+    - name: Check the extra directives are in the Service section
+      ansible.builtin.assert:
+        that:
+          - "'\nProtectSystem=yes\nNoNewPrivileges=yes\n' in __service_section"
+          - "'ProtectSystem' not in __unit_text.split('[Service]')[0]"
+          - "'ProtectSystem' not in __unit_text.split('[Install]')[1]"
+      vars:
+        __unit_text: "{{ lookup('ansible.builtin.file', __unit_dir.path ~ '/galaxy-extra-directives.service', rstrip=false) }}"
+        __service_section: "{{ __unit_text.split('[Service]')[1].split('[Install]')[0] }}"
+
+    - name: Check the Galaxy unit has no extra directives by default
+      ansible.builtin.assert:
+        that:
+          - "'ProtectSystem' not in lookup('ansible.builtin.file', __unit_dir.path ~ '/galaxy-no-root.service')"
 
     - name: Remove the temporary directory
       ansible.builtin.file:
